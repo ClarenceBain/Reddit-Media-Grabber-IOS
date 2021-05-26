@@ -125,7 +125,7 @@
 
     AVAssetExportSession *exportV = [[AVAssetExportSession alloc] initWithAsset:mergeComp presetName:AVAssetExportPresetHighestQuality];
     exportV.outputFileType = AVFileTypeQuickTimeMovie;
-    exportV.outputURL = [NSURL fileURLWithPath:arg3];
+    exportV.outputURL = [NSURL fileURLWithPath:[redditApp.dataContainerURL.path stringByAppendingString:@"/Documents/final.mov"]];
     [exportV exportAsynchronouslyWithCompletionHandler:^(void ) {}];
   }
 }
