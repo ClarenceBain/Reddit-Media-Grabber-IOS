@@ -152,9 +152,9 @@
     NSArray *data = @[toShare];
     [RMG showShareView:data view:arg2 completetion:^(NSString *activity, BOOL success, NSArray *returned, NSError *error) {
       if(success)
-      {
+      { 
         [arg2 dismissViewControllerAnimated:YES completion:nil];
-        [RMG deleteFileAtPath:toShare.absoluteString];
+        [RMG deleteFileAtPath:[redditApp.dataContainerURL.path stringByAppendingString:@"/Documents/temp.gif"]];
       }
     }];
   }
