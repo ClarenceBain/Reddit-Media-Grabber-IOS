@@ -34,7 +34,7 @@ You will need:
   ```
 
 After setting up your Makefile you can begin usage, example below:
-```obj
+```objc
 // This is an example of using RMG, this hook may or may not work in actual testing
 #import "RedditMediaGrabber.h"
 
