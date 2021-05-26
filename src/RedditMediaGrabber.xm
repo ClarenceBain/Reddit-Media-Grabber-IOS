@@ -106,6 +106,7 @@
 }
 
 + (void)mergeMp3WithMp4:(NSString*)arg1 mp4:(NSString*)arg2 {
+  FBApplicationInfo *redditApp = [%c(LSApplicationProxy) applicationProxyForIdentifier: @"com.reddit.Reddit"];
   AVMutableComposition *mergeComp = [AVMutableComposition composition];
 
   NSURL *audio_url = [NSURL fileURLWithPath:arg1];
