@@ -20,13 +20,17 @@
 
 @interface RMG : NSObject
 + (bool)isMp3Playable:(NSURL*)arg1;
-+ (NSString*)getAudioLinkFromURL:(NSString *)arg1;
++ (NSString*)getAudioLinkFromURLString:(NSString *)arg1;
 + (NSString*)getGifLinkFromPost:(TheatreViewController*)arg1;
++ (NSString*)getRedditDocumentsPath;
 + (NSString*)getVideoLinkFromJson:(TheatreViewController*)arg1;
 + (void)deleteFileAtPath:(NSString*)arg1;
-+ (void)downloadGifFromURL:(NSString*)arg1;
-+ (void)downloadMp4FromURL:(NSString*)arg1 isMp3:(bool)arg2;
-+ (void)mergeMp3WithMp4:(NSString*)arg1 mp4:(NSString*)arg2;
-+ (void)saveToPhotos:(NSString*)arg1 view:(TheatreViewController*)arg2 isVideo:(bool)arg3;
-+ (void)showShareView:(NSArray*)arg1 view:(TheatreViewController*)arg2 completetion:(void (^)(NSString *activity, BOOL success, NSArray *returned, NSError *error))arg3;
++ (void)downloadAndSaveVideoToPhotos:(TheatreViewController*)arg1;
++ (void)downloadGifFromURL:(NSURL*)arg1 downloadPath:(NSString*)arg2;
++ (void)downloadMp4FromURL:(NSURL*)arg1 downloadPath:(NSString*)arg2;
++ (void)mergeMp3WithMp4:(NSURL*)arg1 mp4:(NSURL*)arg2 outputMovPath:(NSString*)arg3;
++ (NSInteger)returnMediaTypeFromView:(TheatreViewController*)arg1;
++ (NSInteger)returnMediaType:(NSString*)arg1;
++ (void)saveToPhotos:(NSURL*)arg1 view:(TheatreViewController*)arg2 completion:(void (^)(NSString *activity, BOOL success, NSArray *returned, NSError *error))arg3;
++ (void)showShareView:(NSArray*)arg1 view:(TheatreViewController*)arg2 completion:(void (^)(NSString *activity, BOOL success, NSArray *returned, NSError *error))arg3;
 @end

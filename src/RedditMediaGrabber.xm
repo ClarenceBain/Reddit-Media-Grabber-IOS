@@ -14,7 +14,7 @@
   }
 }
 
-+ (NSString*)getAudioLinkFromURL:(NSString *)arg1 {
++ (NSString*)getAudioLinkFromURLString:(NSString *)arg1 {
   NSString *httpsP = @"https://";
   NSRange http = [arg1 rangeOfString:@"https://"];
   NSRange dash = [arg1 rangeOfString:@"DASH"];
@@ -77,39 +77,65 @@
     [[NSFileManager defaultManager] removeItemAtPath:arg1 error:nil];
 }
 
-+ (void)downloadGifFromURL:(NSString*)arg1 {
-  FBApplicationInfo *redditApp = [%c(LSApplicationProxy) applicationProxyForIdentifier: @"com.reddit.Reddit"];
-  NSData *image = [NSData dataWithContentsOfURL:[NSURL URLWithString:arg1]];
-  NSString *dlPath;
-  if([arg1 rangeOfString:@".gif"].location != NSNotFound)
-    dlPath = [redditApp.dataContainerURL.path stringByAppendingPathComponent:@"/Documents/temp.gif"];
++ (void)downloadAndSaveVideoToPhotos:(TheatreViewController*)arg1 {
+  NSString *video = [RMG getVideoLinkFromJson:arg1];
+  NSString *audio = [RMG getAudioLinkFromURLString:video];
+  [RMG downloadMp4FromURL:[NSURL URLWithString:video] downloadPath:[[RMG getRedditDocumentsPath] stringByAppendingString:@"/tempvideo.mp4"]];
+  [RMG downloadMp4FromURL:[NSURL URLWithString:audio] downloadPath:[[RMG getRedditDocumentsPath] stringByAppendingString:@"/tempaudio.mp3"]];
+  if(![RMG isMp3Playable:[NSURL fileURLWithPath:[[RMG getRedditDocumentsPath] stringByAppendingString:@"/tempaudio.mp3"]]])
+  {
+    [RMG saveToPhotos:[NSURL fileURLWithPath:[[RMG getRedditDocumentsPath] stringByAppendingString:@"/tempvideo.mp4"]] view:arg1 completion:^(NSString *activity, BOOL success, NSArray *returned, NSError *error) {
+      if(success)
+      {
+        [arg1 dismissViewControllerAnimated:YES completion:nil];
+        [RMG deleteFileAtPath:[[RMG getRedditDocumentsPath] stringByAppendingString:@"/tempvideo.mp4"]];
+        [RMG deleteFileAtPath:[[RMG getRedditDocumentsPath] stringByAppendingString:@"/tempaudio.mp3"]];
+      } else {
+        [arg1 dismissViewControllerAnimated:YES completion:nil];
+        [RMG deleteFileAtPath:[[RMG getRedditDocumentsPath] stringByAppendingString:@"/tempvideo.mp4"]];
+        [RMG deleteFileAtPath:[[RMG getRedditDocumentsPath] stringByAppendingString:@"/tempaudio.mp3"]];
+      }
+    }];
+  } else {
+    [RMG mergeMp3WithMp4:[NSURL fileURLWithPath:[[RMG getRedditDocumentsPath] stringByAppendingString:@"/tempaudio.mp3"]] mp4:[NSURL fileURLWithPath:[[RMG getRedditDocumentsPath] stringByAppendingString:@"/tempvideo.mp4"]] outputMovPath:[[RMG getRedditDocumentsPath] stringByAppendingString:@"/final.mov"]];
+    [RMG saveToPhotos:[NSURL fileURLWithPath:[[RMG getRedditDocumentsPath] stringByAppendingString:@"/final.mov"]] view:arg1 completion:^(NSString *activity, BOOL success, NSArray *returned, NSError *error) {
+      if(success)
+      {
+        [arg1 dismissViewControllerAnimated:YES completion:nil];
+        [RMG deleteFileAtPath:[[RMG getRedditDocumentsPath] stringByAppendingString:@"/tempvideo.mp4"]];
+        [RMG deleteFileAtPath:[[RMG getRedditDocumentsPath] stringByAppendingString:@"/tempaudio.mp3"]];
+        [RMG deleteFileAtPath:[[RMG getRedditDocumentsPath] stringByAppendingString:@"/final.mov"]];
+      } else {
+        [arg1 dismissViewControllerAnimated:YES completion:nil];
+        [RMG deleteFileAtPath:[[RMG getRedditDocumentsPath] stringByAppendingString:@"/tempvideo.mp4"]];
+        [RMG deleteFileAtPath:[[RMG getRedditDocumentsPath] stringByAppendingString:@"/tempaudio.mp3"]];
+        [RMG deleteFileAtPath:[[RMG getRedditDocumentsPath] stringByAppendingString:@"/final.mov"]];
+      }
+    }];
+  }
+}
+
++ (void)downloadGifFromURL:(NSURL*)arg1 downloadPath:(NSString*)arg2 {
+  NSData *image = [NSData dataWithContentsOfURL:arg1];
+  NSString *dlPath = arg2;
   [image writeToFile:dlPath atomically:YES];
 }
 
-+ (void)downloadMp4FromURL:(NSString*)arg1 isMp3:(bool)arg2 {
++ (NSString*)getRedditDocumentsPath {
   FBApplicationInfo *redditApp = [%c(LSApplicationProxy) applicationProxyForIdentifier: @"com.reddit.Reddit"];
-  if(arg2)
-  {
-    NSData *sound = [NSData dataWithContentsOfURL:[NSURL URLWithString:arg1]];
-    if(sound != nil)
-    {
-      NSString *dlPath = [redditApp.dataContainerURL.path stringByAppendingPathComponent:@"/Documents/tempaudio.mp3"];
-      [sound writeToFile:dlPath atomically:YES];
-    }
-  }
-  else
-  {
-    NSData *other = [NSData dataWithContentsOfURL:[NSURL URLWithString:arg1]];
-    NSString *dlPath = [redditApp.dataContainerURL.path stringByAppendingPathComponent:@"/Documents/temp.mp4"];
-    [other writeToFile:dlPath atomically:YES];
-  }
+  return [redditApp.dataContainerURL.path stringByAppendingPathComponent:@"/Documents"];
 }
 
-+ (void)mergeMp3WithMp4:(NSString*)arg1 mp4:(NSString*)arg2 {
-  FBApplicationInfo *redditApp = [%c(LSApplicationProxy) applicationProxyForIdentifier: @"com.reddit.Reddit"];
++ (void)downloadMp4FromURL:(NSURL*)arg1 downloadPath:(NSString*)arg2 {
+  NSData *other = [NSData dataWithContentsOfURL:arg1];
+  NSString *dlPath = arg2;
+  [other writeToFile:dlPath atomically:YES];
+}
+
++ (void)mergeMp3WithMp4:(NSURL*)arg1 mp4:(NSURL*)arg2 outputMovPath:(NSString*)arg3 {
   AVMutableComposition *mergeComp = [AVMutableComposition composition];
 
-  NSURL *audio_url = [NSURL fileURLWithPath:arg1];
+  NSURL *audio_url = arg1;
   if([RMG isMp3Playable:audio_url])
   {
     AVURLAsset  *audioAsset = [[AVURLAsset alloc] initWithURL:audio_url options:nil];
@@ -118,7 +144,7 @@
     AVMutableCompositionTrack *compAudioTrack = [mergeComp addMutableTrackWithMediaType:AVMediaTypeAudio preferredTrackID:kCMPersistentTrackID_Invalid];
     [compAudioTrack insertTimeRange:audio_timeRange ofTrack:[[audioAsset tracksWithMediaType:AVMediaTypeAudio] objectAtIndex:0] atTime:kCMTimeZero error:nil];
 
-    AVURLAsset  *videoAsset = [[AVURLAsset alloc] initWithURL:[NSURL fileURLWithPath:arg2] options:nil];
+    AVURLAsset  *videoAsset = [[AVURLAsset alloc] initWithURL:arg2 options:nil];
     CMTimeRange video_timeRange = CMTimeRangeMake(kCMTimeZero, audioAsset.duration);
 
     AVMutableCompositionTrack *compVideoTrack = [mergeComp addMutableTrackWithMediaType:AVMediaTypeVideo preferredTrackID:kCMPersistentTrackID_Invalid];
@@ -126,41 +152,58 @@
 
     AVAssetExportSession *exportV = [[AVAssetExportSession alloc] initWithAsset:mergeComp presetName:AVAssetExportPresetHighestQuality];
     exportV.outputFileType = AVFileTypeQuickTimeMovie;
-    exportV.outputURL = [NSURL fileURLWithPath:[redditApp.dataContainerURL.path stringByAppendingString:@"/Documents/final.mov"]];
+    exportV.outputURL = [NSURL fileURLWithPath:arg3];
     [exportV exportAsynchronouslyWithCompletionHandler:^(void ) {}];
   }
 }
 
-+ (void)saveToPhotos:(NSString*)arg1 view:(TheatreViewController*)arg2 isVideo:(bool)arg3 {
-  FBApplicationInfo *redditApp = [%c(LSApplicationProxy) applicationProxyForIdentifier: @"com.reddit.Reddit"];
-  NSURL *toShare = [NSURL fileURLWithPath:arg1];
-  NSArray *data = @[toShare];
-  if(arg3)
+
++ (NSInteger)returnMediaTypeFromView:(TheatreViewController*)arg1 {
+  TheatreBottomBarView *bbHook = MSHookIvar<TheatreBottomBarView*>(arg1, "_bottomBar");
+  TheatreMediaItem *miHook;
+  Post *pHook;
+
+  if(bbHook != nil)
+    miHook = MSHookIvar<TheatreMediaItem*>(bbHook, "_mediaItem");
+  if(miHook != nil)
+    pHook = MSHookIvar<Post*>(miHook, "_originalPost");
+  if(pHook != nil)
   {
-    [RMG showShareView:data view:arg2 completetion:^(NSString *activity, BOOL success, NSArray *returned, NSError *error) {
-      if(success)
-      {
-        [arg2 dismissViewControllerAnimated:YES completion:nil];
-        [RMG deleteFileAtPath:[redditApp.dataContainerURL.path stringByAppendingString:@"/Documents/tempaudio.mp3"]];
-        [RMG deleteFileAtPath:[redditApp.dataContainerURL.path stringByAppendingString:@"/Documents/temp.mp4"]];
-        [RMG deleteFileAtPath:[redditApp.dataContainerURL.path stringByAppendingString:@"/Documents/final.mov"]];
-      }
-    }];
-  } else
-  {
-    NSURL *toShare = [NSURL fileURLWithPath:arg1];
-    NSArray *data = @[toShare];
-    [RMG showShareView:data view:arg2 completetion:^(NSString *activity, BOOL success, NSArray *returned, NSError *error) {
-      if(success)
-      { 
-        [arg2 dismissViewControllerAnimated:YES completion:nil];
-        [RMG deleteFileAtPath:[redditApp.dataContainerURL.path stringByAppendingString:@"/Documents/temp.gif"]];
-      }
-    }];
+    if([MSHookIvar<NSURL*>(pHook, "_linkURL").absoluteString rangeOfString:@".gif"].location != NSNotFound && [MSHookIvar<NSURL*>(pHook, "_linkURL").absoluteString rangeOfString:@".gifv"].location == NSNotFound)
+    {
+      return 0;  // this is a .gif
+    } else if([MSHookIvar<NSURL*>(pHook, "_linkURL").absoluteString rangeOfString:@".gif"].location != NSNotFound && [MSHookIvar<NSURL*>(pHook, "_linkURL").absoluteString rangeOfString:@".gifv"].location != NSNotFound)
+    {
+      return 1;  // this is a .gifv
+    } else if([MSHookIvar<NSURL*>(pHook, "_linkURL").absoluteString rangeOfString:@"v.redd.it"].location != NSNotFound)
+    {
+      return 2;  // this is a .mp4
+    }
   }
+  return -1; // error or nil
 }
 
-+ (void)showShareView:(NSArray*)arg1 view:(TheatreViewController*)arg2 completetion:(void (^)(NSString *activity, BOOL success, NSArray *returned, NSError *error))arg3 {
++ (NSInteger)returnMediaType:(NSString*)arg1 {
+  if([arg1 rangeOfString:@".gif"].location != NSNotFound && [arg1 rangeOfString:@".gifv"].location == NSNotFound)
+  {
+    return 0;  // this is a .gif
+  } else if([arg1 rangeOfString:@".gif"].location != NSNotFound && [arg1 rangeOfString:@".gifv"].location != NSNotFound)
+  {
+    return 1;  // this is a .gifv
+  } else if([arg1 rangeOfString:@"v.redd.it"].location != NSNotFound)
+  {
+    return 2;  // this is a .mp4
+  }
+  return -1; // error or nil
+}
+
++ (void)saveToPhotos:(NSURL*)arg1 view:(TheatreViewController*)arg2 completion:(void (^)(NSString *activity, BOOL success, NSArray *returned, NSError *error))arg4 {
+  NSURL *toShare = arg1;
+  NSArray *data = @[toShare];
+  [RMG showShareView:data view:arg2 completion:arg4];
+}
+
++ (void)showShareView:(NSArray*)arg1 view:(TheatreViewController*)arg2 completion:(void (^)(NSString *activity, BOOL success, NSArray *returned, NSError *error))arg3 {
   UIActivityViewController *shareController = [[UIActivityViewController alloc] initWithActivityItems:arg1 applicationActivities:nil];
   shareController.excludedActivityTypes = @[UIActivityTypePrint,UIActivityTypeCopyToPasteboard,UIActivityTypeAssignToContact];
   shareController.completionWithItemsHandler = arg3;

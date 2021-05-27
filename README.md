@@ -3,9 +3,6 @@
 Reddit Media Grabber is a small library that can be used by tweak developers
 for use on the official Reddit applciation (for Apple IOS)
 
-This wasn't originally intended to be released publicly so a lot of the
-methods are hardcoded and may need tinkering depending on how you want things.
-
 ### Prerequisites
 
 You will need:
@@ -33,7 +30,9 @@ You will need:
   Example_FRAMEWORKS = UIKit AVFoundation
   ```
 
-After setting up your Makefile you can begin usage, example below:
+After setting up your Makefile you can begin usage, examples below:
+
+Grabbing video (automatic method):
 ```objc
 // This is an example of using RMG, this hook may or may not work in actual testing
 #import "RedditMediaGrabber.h"
@@ -41,31 +40,111 @@ After setting up your Makefile you can begin usage, example below:
 %hook TheatreViewController
 - (void)viewDidLoad {
   %orig;
-  FBApplicationInfo *redditApp = [%c(LSApplicationProxy) applicationProxyForIdentifier: @"com.reddit.Reddit"]; // Downloaded files are saved to the apps documents folder, we use this to get there
-  NSString *videoLink = [RMG getVideoLinkFromJson:self];     // Get the video
-  NSString *audioLink = [RMG getAudioLinkFromURL:videoLink]; // Audio is detached from Reddit Videos by default so we have to grab it separately
-  [RMG downloadMp4FromURL:videoLink isMp3:false];
-  [RMG downloadMp4FromURL:audioLink isMp3:true];             // The audio link is really just an .mp4 without video, only reason i've added it to this method.
 
-
-  // Some videos do not come with audio and return as an access denied, so we check if the audio can be played to avoid crashes.
-  // By default audio is saved as "tempaudio.mp3" in the Reddit Applications Documents folder, you can change this in RedditMediaGrabber.xm
-  // ^ The same goes for the temporary video file & final video file. (temp.mp4, final.mov)
-  NSString *mp3Path = [redditApp.dataContainerURL.path stringByAppendingPathComponent:@"/Documents/tempaudio.mp3"];
-  NSString *mp4Path = [redditApp.dataContainerURL.path stringByAppendingPathComponent:@"/Documents/temp.mp4"]
-  NSString *finalPath = [redditApp.dataContainerURL.path stringByAppendingPathComponent:@"/Documents/final.mov"]
-  if([RMG isMp3Playable:[NSURL fileURLWithPath:mp3Path]])
+  if([RMG returnMediaTypeFromView:self] == 2) // check if the media is a video
   {
-    [RMG mergeMp3WithMp4:mp3Path mp4:mp4Path]
-    [RMG saveToPhotos:finalPath view:self isVideo:true];
-    [RMG deleteFileAtPath:mp3Path];      // Make sure the files are deleted in case of closing the share tab
-    [RMG deleteFileAtPath:mp4Path];      // Make sure the files are deleted in case of closing the share tab
-    [RMG deleteFileAtPath:finalPath];    // Make sure the files are deleted in case of closing the share tab
-  } else {
-    // Since the video didn't have audio we don't have to merge anything and can just use the temp file
-    [RMG saveToPhotos:mp4Path view:self isVideo:true];
-    [RMG deleteFileAtPath:mp3Path];      // Make sure the files are deleted in case of closing the share tab
-    [RMG deleteFileAtPath:mp4Path];      // Make sure the files are deleted in case of closing the share tab
+    [RMG downloadAndSaveVideoToPhotos:self]; // automatic way
+  }
+}
+%end
+```
+
+Grabbing video (manual method):
+```objc
+// This is an example of using RMG, this hook may or may not work in actual testing
+#import "RedditMediaGrabber.h"
+
+%hook TheatreViewController
+- (void)viewDidLoad {
+  %orig;
+
+  if([RMG returnMediaTypeFromView:self] == 2) // check if the media is a video
+  {
+    // Get the video and audio links (reddit separates them)
+    NSString *video = [RMG getVideoLinkFromJson:self];
+    NSString *audio = [RMG getAudioLinkFromURLString:video];
+
+    // Download the video and audio files and store them in the Reddit applications Documents folder using [RMG getRedditDocumentsPath]
+    [RMG downloadMp4FromURL:[NSURL URLWithString:video] downloadPath:[[RMG getRedditDocumentsPath] stringByAppendingString:@"/tempvideo.mp4"]];
+    [RMG downloadMp4FromURL:[NSURL URLWithString:audio] downloadPath:[[RMG getRedditDocumentsPath] stringByAppendingString:@"/tempaudio.mp3"]];
+
+    // Check if the audio file we downloaded is playable and not an access denied (aka video had no audio)
+    if(![RMG isMp3Playable:[NSURL fileURLWithPath:[[RMG getRedditDocumentsPath] stringByAppendingString:@"/tempaudio.mp3"]]]) // if NO audio
+    {
+      [RMG saveToPhotos:[NSURL fileURLWithPath:[[RMG getRedditDocumentsPath] stringByAppendingString:@"/tempvideo.mp4"]] view:arg1 completion:^(NSString *activity, BOOL success, NSArray *returned, NSError *error) {
+        if(success)
+        {
+          [arg1 dismissViewControllerAnimated:YES completion:nil];
+          [RMG deleteFileAtPath:[[RMG getRedditDocumentsPath] stringByAppendingString:@"/tempvideo.mp4"]];
+          [RMG deleteFileAtPath:[[RMG getRedditDocumentsPath] stringByAppendingString:@"/tempaudio.mp3"]];
+        } else { // if the person closes the share controller without saving the files make sure they get deleted
+          [RMG deleteFileAtPath:[[RMG getRedditDocumentsPath] stringByAppendingString:@"/tempvideo.mp4"]];
+          [RMG deleteFileAtPath:[[RMG getRedditDocumentsPath] stringByAppendingString:@"/tempaudio.mp3"]];
+        }
+      }];
+    }
+    else { // if there is audio
+      // merge the two files we downloaded together
+      [RMG mergeMp3WithMp4:[NSURL fileURLWithPath:[[RMG getRedditDocumentsPath] stringByAppendingString:@"/tempaudio.mp3"]] mp4:[NSURL fileURLWithPath:[[RMG getRedditDocumentsPath] stringByAppendingString:@"/tempvideo.mp4"]] outputMovPath:[[RMG getRedditDocumentsPath] stringByAppendingString:@"/final.mov"]];
+      [RMG saveToPhotos:[NSURL fileURLWithPath:[[RMG getRedditDocumentsPath] stringByAppendingString:@"/final.mov"]] view:arg1 completion:^(NSString *activity, BOOL success, NSArray *returned, NSError *error) {
+        if(success)
+        {
+          [arg1 dismissViewControllerAnimated:YES completion:nil];
+          [RMG deleteFileAtPath:[[RMG getRedditDocumentsPath] stringByAppendingString:@"/tempvideo.mp4"]];
+          [RMG deleteFileAtPath:[[RMG getRedditDocumentsPath] stringByAppendingString:@"/tempaudio.mp3"]];
+          [RMG deleteFileAtPath:[[RMG getRedditDocumentsPath] stringByAppendingString:@"/final.mov"]];
+        } else {  // if the person closes the share controller without saving the files make sure they get deleted
+          [RMG deleteFileAtPath:[[RMG getRedditDocumentsPath] stringByAppendingString:@"/tempvideo.mp4"]];
+          [RMG deleteFileAtPath:[[RMG getRedditDocumentsPath] stringByAppendingString:@"/tempaudio.mp3"]];
+          [RMG deleteFileAtPath:[[RMG getRedditDocumentsPath] stringByAppendingString:@"/final.mov"]];
+        }
+      }];
+    }
+  }
+}
+%end
+```
+
+Grabbing gif or gifv (manual for now):
+```objc
+// This is an example of using RMG, this hook may or may not work in actual testing
+#import "RedditMediaGrabber.h"
+
+%hook TheatreViewController
+- (void)viewDidLoad {
+  %orig;
+
+  if([RMG returnMediaTypeFromView:self] == 0) // check if the media is a gif
+  {
+    NSString *imageL = [RMG getGifLinkFromPost:self];
+    if(imageL != nil)
+      [RMG downloadGifFromURL:[NSURL URLWithString:imageL] downloadPath:[[RMG getRedditDocumentsPath] stringByAppendingString:@"/temp.gif"]];
+    [RMG saveToPhotos:[NSURL fileURLWithPath:[[RMG getRedditDocumentsPath] stringByAppendingString:@"/temp.gif"]] view:self completion:^(NSString *activity, BOOL success, NSArray *returned, NSError *error) {
+      if(success)
+      {
+        [self dismissViewControllerAnimated:YES completion:nil];
+        [RMG deleteFileAtPath:[[RMG getRedditDocumentsPath] stringByAppendingString:@"/temp.gif"]];
+      } else {
+        [self dismissViewControllerAnimated:YES completion:nil];
+        [RMG deleteFileAtPath:[[RMG getRedditDocumentsPath] stringByAppendingString:@"/temp.gif"]];
+      }
+    }];
+  } 
+  else if ([RMG returnMediaTypeFromView:self] == 1) // check if the media is a gifv
+  {
+    NSString *imageL = [[RMG getGifLinkFromPost:self] substringToIndex:[[RMG getGifLinkFromPost:self] length] - 1]; // remove the v from .gifv
+    if(imageL != nil)
+      [RMG downloadGifFromURL:[NSURL URLWithString:imageL] downloadPath:[[RMG getRedditDocumentsPath] stringByAppendingString:@"/temp.gif"]];
+    [RMG saveToPhotos:[NSURL fileURLWithPath:[[RMG getRedditDocumentsPath] stringByAppendingString:@"/temp.gif"]] view:self completion:^(NSString *activity, BOOL success, NSArray *returned, NSError *error) {
+      if(success)
+      {
+        [self dismissViewControllerAnimated:YES completion:nil];
+        [RMG deleteFileAtPath:[[RMG getRedditDocumentsPath] stringByAppendingString:@"/temp.gif"]];
+      } else {
+        [self dismissViewControllerAnimated:YES completion:nil];
+        [RMG deleteFileAtPath:[[RMG getRedditDocumentsPath] stringByAppendingString:@"/temp.gif"]];
+      }
+    }];
   }
 }
 %end
