@@ -105,7 +105,24 @@ Grabbing video (manual method):
 %end
 ```
 
-Grabbing gif or gifv (manual for now):
+Grabbing gif or gifv (automatic):
+```objc
+// This is an example of using RMG, this hook may or may not work in actual testing
+#import "RedditMediaGrabber.h"
+
+%hook TheatreViewController
+- (void)viewDidLoad {
+  %orig;
+
+  if([RMG returnMediaTypeFromView:self] == 0 || [RMG returnMediaTypeFromView:self] == 1 ) // check if the media is a video
+  {
+    [RMG downloadAndSaveGifToPhotos:self]; // automatic way
+  }
+}
+%end
+```
+
+Grabbing gif or gifv (manual):
 ```objc
 // This is an example of using RMG, this hook may or may not work in actual testing
 #import "RedditMediaGrabber.h"
@@ -129,7 +146,7 @@ Grabbing gif or gifv (manual for now):
         [RMG deleteFileAtPath:[[RMG getRedditDocumentsPath] stringByAppendingString:@"/temp.gif"]];
       }
     }];
-  } 
+  }
   else if ([RMG returnMediaTypeFromView:self] == 1) // check if the media is a gifv
   {
     NSString *imageL = [[RMG getGifLinkFromPost:self] substringToIndex:[[RMG getGifLinkFromPost:self] length] - 1]; // remove the v from .gifv

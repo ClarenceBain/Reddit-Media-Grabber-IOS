@@ -26,6 +26,7 @@
 + (NSString*)getVideoLinkFromJson:(TheatreViewController*)arg1;
 + (void)deleteFileAtPath:(NSString*)arg1;
 + (void)downloadAndSaveVideoToPhotos:(TheatreViewController*)arg1;
++ (void)downloadAndSaveGifToPhotos:(TheatreViewController*)arg1;
 + (void)downloadGifFromURL:(NSURL*)arg1 downloadPath:(NSString*)arg2;
 + (void)downloadMp4FromURL:(NSURL*)arg1 downloadPath:(NSString*)arg2;
 + (void)mergeMp3WithMp4:(NSURL*)arg1 mp4:(NSURL*)arg2 outputMovPath:(NSString*)arg3;

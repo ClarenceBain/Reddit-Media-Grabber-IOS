@@ -115,6 +115,41 @@
   }
 }
 
++ (void)downloadAndSaveGifToPhotos:(TheatreViewController*)arg1 {
+  if([RMG returnMediaTypeFromView:arg1] == 0) // check if the media is a gif
+  {
+    NSString *imageL = [RMG getGifLinkFromPost:arg1];
+    if(imageL != nil)
+      [RMG downloadGifFromURL:[NSURL URLWithString:imageL] downloadPath:[[RMG getRedditDocumentsPath] stringByAppendingString:@"/temp.gif"]];
+    [RMG saveToPhotos:[NSURL fileURLWithPath:[[RMG getRedditDocumentsPath] stringByAppendingString:@"/temp.gif"]] view:arg1 completion:^(NSString *activity, BOOL success, NSArray *returned, NSError *error) {
+      if(success)
+      {
+        [self dismissViewControllerAnimated:YES completion:nil];
+        [RMG deleteFileAtPath:[[RMG getRedditDocumentsPath] stringByAppendingString:@"/temp.gif"]];
+      } else {
+        [self dismissViewControllerAnimated:YES completion:nil];
+        [RMG deleteFileAtPath:[[RMG getRedditDocumentsPath] stringByAppendingString:@"/temp.gif"]];
+      }
+    }];
+  }
+  else if ([RMG returnMediaTypeFromView:arg1] == 1) // check if the media is a gifv
+  {
+    NSString *imageL = [[RMG getGifLinkFromPost:arg1] substringToIndex:[[RMG getGifLinkFromPost:arg1] length] - 1]; // remove the v from .gifv
+    if(imageL != nil)
+      [RMG downloadGifFromURL:[NSURL URLWithString:imageL] downloadPath:[[RMG getRedditDocumentsPath] stringByAppendingString:@"/temp.gif"]];
+    [RMG saveToPhotos:[NSURL fileURLWithPath:[[RMG getRedditDocumentsPath] stringByAppendingString:@"/temp.gif"]] view:arg1 completion:^(NSString *activity, BOOL success, NSArray *returned, NSError *error) {
+      if(success)
+      {
+        [self dismissViewControllerAnimated:YES completion:nil];
+        [RMG deleteFileAtPath:[[RMG getRedditDocumentsPath] stringByAppendingString:@"/temp.gif"]];
+      } else {
+        [self dismissViewControllerAnimated:YES completion:nil];
+        [RMG deleteFileAtPath:[[RMG getRedditDocumentsPath] stringByAppendingString:@"/temp.gif"]];
+      }
+    }];
+  }
+}
+
 + (void)downloadGifFromURL:(NSURL*)arg1 downloadPath:(NSString*)arg2 {
   NSData *image = [NSData dataWithContentsOfURL:arg1];
   NSString *dlPath = arg2;
