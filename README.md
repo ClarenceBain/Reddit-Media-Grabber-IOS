@@ -14,7 +14,7 @@ You will need:
 
 1. Download the files [here.](https://github.com/ClarenceBain/Reddit-Media-Grabber-IOS/tree/main/src)
 2. Transfer RedditHeaders.h, RedditMediaGrabber.h, & RedditMediaGrabber.xm to your Tweaks directory
-3. After transfer make sure your Makefile the following:
+3. After transfer make sure your Makefile has the following:
   * RedditMediaGrabber.xm on the _FILES line
   * UIKit & AVFoundation on the _FRAMEWORKS line
   * Example:
