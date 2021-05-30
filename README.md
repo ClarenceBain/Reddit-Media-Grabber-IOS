@@ -114,7 +114,7 @@ Grabbing gif or gifv (automatic):
 - (void)viewDidLoad {
   %orig;
 
-  if([RMG returnMediaTypeFromView:self] == 0 || [RMG returnMediaTypeFromView:self] == 1 ) // check if the media is a video
+  if([RMG returnMediaTypeFromView:self] == 0 || [RMG returnMediaTypeFromView:self] == 1 ) // check if the media is a gif or gifv
   {
     [RMG downloadAndSaveGifToPhotos:self]; // automatic way
   }
