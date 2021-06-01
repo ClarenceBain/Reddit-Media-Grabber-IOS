@@ -124,10 +124,10 @@
     [RMG saveToPhotos:[NSURL fileURLWithPath:[[RMG getRedditDocumentsPath] stringByAppendingString:@"/temp.gif"]] view:arg1 completion:^(NSString *activity, BOOL success, NSArray *returned, NSError *error) {
       if(success)
       {
-        [self dismissViewControllerAnimated:YES completion:nil];
+        [arg1 dismissViewControllerAnimated:YES completion:nil];
         [RMG deleteFileAtPath:[[RMG getRedditDocumentsPath] stringByAppendingString:@"/temp.gif"]];
       } else {
-        [self dismissViewControllerAnimated:YES completion:nil];
+        [arg1 dismissViewControllerAnimated:YES completion:nil];
         [RMG deleteFileAtPath:[[RMG getRedditDocumentsPath] stringByAppendingString:@"/temp.gif"]];
       }
     }];
@@ -140,10 +140,10 @@
     [RMG saveToPhotos:[NSURL fileURLWithPath:[[RMG getRedditDocumentsPath] stringByAppendingString:@"/temp.gif"]] view:arg1 completion:^(NSString *activity, BOOL success, NSArray *returned, NSError *error) {
       if(success)
       {
-        [self dismissViewControllerAnimated:YES completion:nil];
+        [arg1 dismissViewControllerAnimated:YES completion:nil];
         [RMG deleteFileAtPath:[[RMG getRedditDocumentsPath] stringByAppendingString:@"/temp.gif"]];
       } else {
-        [self dismissViewControllerAnimated:YES completion:nil];
+        [arg1 dismissViewControllerAnimated:YES completion:nil];
         [RMG deleteFileAtPath:[[RMG getRedditDocumentsPath] stringByAppendingString:@"/temp.gif"]];
       }
     }];
