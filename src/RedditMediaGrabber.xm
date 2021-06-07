@@ -234,8 +234,12 @@
 
 + (void)saveToPhotos:(NSURL*)arg1 view:(TheatreViewController*)arg2 completion:(void (^)(NSString *activity, BOOL success, NSArray *returned, NSError *error))arg4 {
   NSURL *toShare = arg1;
-  NSArray *data = @[toShare];
+  NSArray *data = [NSArray arrayWithObjects:toShare, nil];
+  NSArray *data2 = [NSArray arrayWithObjects:toShare, nil];
   [RMG showShareView:data view:arg2 completion:arg4];
+  [arg2 dismissViewControllerAnimated:NO completion:^{
+      [RMG showShareView:data2 view:arg2 completion:arg4]; // why & how the hell does this fix the problem?
+  }];
 }
 
 + (void)showShareView:(NSArray*)arg1 view:(TheatreViewController*)arg2 completion:(void (^)(NSString *activity, BOOL success, NSArray *returned, NSError *error))arg3 {
