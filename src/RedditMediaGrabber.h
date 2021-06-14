@@ -19,19 +19,13 @@
 @end
 
 @interface RMG : NSObject
-+ (bool)isMp3Playable:(NSURL*)arg1;
-+ (NSString*)getAudioLinkFromURLString:(NSString *)arg1;
-+ (NSString*)getGifLinkFromPost:(TheatreViewController*)arg1;
-+ (NSString*)getRedditDocumentsPath;
-+ (NSString*)getVideoLinkFromJson:(TheatreViewController*)arg1;
-+ (void)deleteFileAtPath:(NSString*)arg1;
-+ (void)downloadAndSaveVideoToPhotos:(TheatreViewController*)arg1;
-+ (void)downloadAndSaveGifToPhotos:(TheatreViewController*)arg1;
-+ (void)downloadGifFromURL:(NSURL*)arg1 downloadPath:(NSString*)arg2;
-+ (void)downloadMp4FromURL:(NSURL*)arg1 downloadPath:(NSString*)arg2;
-+ (void)mergeMp3WithMp4:(NSURL*)arg1 mp4:(NSURL*)arg2 outputMovPath:(NSString*)arg3;
-+ (NSInteger)returnMediaTypeFromView:(TheatreViewController*)arg1;
-+ (NSInteger)returnMediaType:(NSString*)arg1;
-+ (void)saveToPhotos:(NSURL*)arg1 view:(TheatreViewController*)arg2 completion:(void (^)(NSString *activity, BOOL success, NSArray *returned, NSError *error))arg3;
-+ (void)showShareView:(NSArray*)arg1 view:(TheatreViewController*)arg2 completion:(void (^)(NSString *activity, BOOL success, NSArray *returned, NSError *error))arg3;
++ (bool)checkMP3:(NSURL*)filePath;
++ (NSInteger)checkMediaTypeOfPost:(Post*)post;
++ (NSString*)documentsPath;
++ (void)downloadMediaFromPost:(Post*)post;
++ (void)deleteFileAtPath:(NSString*)filePath;
++ (void)savePostMediaToPhotos:(Post*)post view:(UIViewController*)view;
++ (void)mergeMP3WithMP4:(NSURL*)mp3 mp4:(NSURL*)mp4 outputMovPath:(NSString*)movOutput;
++ (void)save:(NSURL*)fileToSave view:(UIViewController*)view completion:(void (^)(NSString *activity, BOOL success, NSArray *returned, NSError *error))complete;
++ (void)share:(NSArray*)dataToShare view:(UIViewController*)view completion:(void (^)(NSString *activity, BOOL success, NSArray *returned, NSError *error))complete;
 @end
